@@ -1,0 +1,28 @@
+# Deps
+node_modules
+
+# Agents
+.agents
+.commandcode
+skills-lock.json
+
+# Output
+out
+dist
+*.tgz
+
+# Logs
+logs
+_.log
+
+# Env
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# Cache
+.eslintcache
+.cache
+*.tsbuildinfo
