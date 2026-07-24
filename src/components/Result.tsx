@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { ImageInfo, CompressionResult } from "../types";
 
 function formatBytes(bytes: number) {
@@ -7,7 +6,7 @@ function formatBytes(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 }
 
-function getFileExtension(format: string) {
+function extensionFor(format: string) {
   if (format === "jpeg") return "jpg";
   if (format === "heif") return "heic";
   return format;
@@ -18,20 +17,22 @@ export function Result({
   result,
   format,
   onReset,
+  onTryAgain,
 }: {
   imageInfo: ImageInfo;
   result: CompressionResult;
   format: string;
   onReset: () => void;
+  onTryAgain: () => void;
 }) {
   const percentageSaved = 100 - Math.round((result.size / imageInfo.size) * 100);
-  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
+  const baseName = imageInfo.name.replace(/\.[^.]+$/, "");
 
   const handleDownload = () => {
-    const downloadLink = document.createElement("a");
-    downloadLink.href = result.url;
-    downloadLink.download = `${imageInfo.name.split(".")[0]}_compressed.${getFileExtension(format)}`;
-    downloadLink.click();
+    const link = document.createElement("a");
+    link.href = result.url;
+    link.download = `${baseName}_compressed.${extensionFor(format)}`;
+    link.click();
   };
 
   return (
@@ -40,9 +41,7 @@ export function Result({
         {percentageSaved >= 0 ? `-${percentageSaved}%` : `+${Math.abs(percentageSaved)}%`}
       </div>
 
-      <div className="pct-label">
-        {percentageSaved >= 0 ? "smaller" : "larger"}
-      </div>
+      <div className="pct-label">{percentageSaved >= 0 ? "smaller" : "larger"}</div>
 
       <div className="size-transition">
         <span>{formatBytes(imageInfo.size)}</span>
@@ -51,29 +50,26 @@ export function Result({
       </div>
 
       <div className="result-preview">
-        <img
-          src={result.url}
-          alt="result"
-          onLoad={(e) => {
-            setDimensions({
-              width: e.currentTarget.naturalWidth,
-              height: e.currentTarget.naturalHeight,
-            });
-          }}
-        />
+        <img src={result.url} alt="result" />
       </div>
 
       <div className="result-metadata">
         <div className="format-size">
-          {dimensions ? `${dimensions.width} × ${dimensions.height}` : `${imageInfo.width} × ${imageInfo.height}`} · {format.toUpperCase()} · {formatBytes(result.size)}
+          {result.width} × {result.height} · {format.toUpperCase()} · {formatBytes(result.size)}
         </div>
       </div>
 
       <div className="action-buttons">
-        <button className="btn btn-go" onClick={handleDownload}>Download</button>
-        <button className="btn btn-go" onClick={onReset}>New Image</button>
+        <button className="btn btn-go" onClick={handleDownload}>
+          Download
+        </button>
+        <button className="btn btn-go" onClick={onTryAgain}>
+          Try Again
+        </button>
+        <button className="btn btn-go" onClick={onReset}>
+          New Image
+        </button>
       </div>
     </div>
   );
 }
-

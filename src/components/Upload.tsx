@@ -1,58 +1,66 @@
-import { useState, useRef, useCallback, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import type { ImageInfo } from "../types";
 
+function formatFromMime(mime: string): string {
+  if (!mime.startsWith("image/")) return mime || "unknown";
+  return mime.slice("image/".length);
+}
+
 export function Upload({ onUploadComplete }: { onUploadComplete: (info: ImageInfo) => void }) {
-  const [progress, setProgress] = useState(0);
-  const [isBusy, setIsBusy] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const uploadFile = useCallback((file: File) => {
-    setIsBusy(true);
-    setProgress(0);
-    const formData = new FormData();
-    formData.append("file", file);
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/upload");
-    xhr.upload.onprogress = (event) => 
-      event.lengthComputable && setProgress(Math.round((event.loaded / event.total) * 100));
-    
-    xhr.onload = () => { 
-      if (xhr.status === 200) {
-        onUploadComplete(JSON.parse(xhr.responseText));
-      }
-      setIsBusy(false);
-    };
-    xhr.onerror = () => setIsBusy(false);
-    xhr.send(formData);
-  }, [onUploadComplete]);
-
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      uploadFile(file);
+  const handleFile = async (file: File) => {
+    setError(null);
+    setBusy(true);
+    try {
+      const bitmap = await createImageBitmap(file);
+      const info: ImageInfo = {
+        id: crypto.randomUUID(),
+        name: file.name,
+        width: bitmap.width,
+        height: bitmap.height,
+        format: formatFromMime(file.type),
+        size: file.size,
+        file,
+      };
+      bitmap.close();
+      onUploadComplete(info);
+    } catch {
+      setError("Could not read this image");
+    } finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
     }
+  };
+
+  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
   };
 
   return (
     <div className="upload-container">
-      {isBusy ? (
-        <div className="upload-progress">
-          <div className="progress-track">
-            <div className="progress-fill" style={{ width: `${progress}%` }} />
-          </div>
-          <span className="progress-text">Uploading {progress}%</span>
-        </div>
+      {error ? (
+        <span className="upload-error">{error}</span>
       ) : (
         <button
           type="button"
           className="btn btn-go"
-          onClick={() => fileInputRef.current?.click()}
+          disabled={busy}
+          onClick={() => inputRef.current?.click()}
         >
-          Upload Image
+          {busy ? "Reading…" : "Upload Image"}
         </button>
       )}
-      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} hidden />
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        onChange={onChange}
+        hidden
+      />
     </div>
   );
 }
-

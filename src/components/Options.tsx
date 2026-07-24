@@ -1,7 +1,7 @@
-import { useState } from "react";
-import type { ImageInfo } from "../types";
+import { useEffect, useState } from "react";
+import type { ImageInfo, OutputFormat, Settings } from "../types";
 
-const FORMATS = ["jpeg", "png", "webp", "avif"] as const;
+const FORMATS: OutputFormat[] = ["jpeg", "png", "webp"];
 
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -12,28 +12,37 @@ function formatBytes(bytes: number) {
 export function Options({
   imageInfo,
   onCompress,
+  error,
+  initialSettings,
 }: {
   imageInfo: ImageInfo;
-  onCompress: (format: string, quality: number, width: number, height: number) => void;
+  onCompress: (format: OutputFormat, quality: number, width: number, height: number) => void;
+  error: string | null;
+  initialSettings: Settings | null;
 }) {
-  const [format, setFormat] = useState("webp");
-  const [quality, setQuality] = useState(80);
-  const [width, setWidth] = useState(0);
-  const [height, setHeight] = useState(0);
-  const [lockAspectRatio, setLockAspectRatio] = useState(true);
+  const [format, setFormat] = useState<OutputFormat>(initialSettings?.format ?? "webp");
+  const [quality, setQuality] = useState(initialSettings?.quality ?? 80);
+  const [width, setWidth] = useState(initialSettings?.width ?? 0);
+  const [height, setHeight] = useState(initialSettings?.height ?? 0);
+  const [lockAspect, setLockAspect] = useState(true);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
 
-  const handleWidthChange = (value: number) => {
-    setWidth(value);
-    if (lockAspectRatio && value > 0) {
-      setHeight(Math.round(value * (imageInfo.height / imageInfo.width)));
-    }
+  useEffect(() => {
+    const url = URL.createObjectURL(imageInfo.file);
+    setPreviewUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [imageInfo.file]);
+
+  const onWidthChange = (v: number) => {
+    setWidth(v);
+    if (lockAspect && v > 0) setHeight(Math.round((v * imageInfo.height) / imageInfo.width));
   };
 
-  const handleHeightChange = (value: number) => {
-    setHeight(value);
-    if (lockAspectRatio && value > 0) {
-      setWidth(Math.round(value * (imageInfo.width / imageInfo.height)));
-    }
+  const onHeightChange = (v: number) => {
+    setHeight(v);
+    if (lockAspect && v > 0) setWidth(Math.round((v * imageInfo.width) / imageInfo.height));
   };
 
   return (
@@ -43,7 +52,7 @@ export function Options({
       </div>
 
       <div className="options-preview">
-        <img src={`/api/img/${imageInfo.id}`} alt="preview" />
+        {previewUrl && <img src={previewUrl} alt="preview" />}
       </div>
 
       <div className="options-metadata">
@@ -51,6 +60,8 @@ export function Options({
           {imageInfo.width} × {imageInfo.height} · {imageInfo.format.toUpperCase()} · {formatBytes(imageInfo.size)}
         </span>
       </div>
+
+      {error && <div className="options-error">{error}</div>}
 
       <div className="card control-panel">
         <div className="control-group">
@@ -75,17 +86,18 @@ export function Options({
             <input
               type="number"
               value={width || ""}
-              onChange={(e) => handleWidthChange(+e.target.value)}
+              onChange={(e) => onWidthChange(+e.target.value)}
               placeholder={String(imageInfo.width)}
               min={1}
             />
           </div>
           <button
-            className={`lock-button ${lockAspectRatio ? "on" : ""}`}
-            onClick={() => setLockAspectRatio(!lockAspectRatio)}
+            className={`lock-button ${lockAspect ? "on" : ""}`}
+            onClick={() => setLockAspect(!lockAspect)}
             type="button"
+            aria-label={lockAspect ? "Unlock aspect ratio" : "Lock aspect ratio"}
           >
-            {lockAspectRatio ? (
+            {lockAspect ? (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -102,7 +114,7 @@ export function Options({
             <input
               type="number"
               value={height || ""}
-              onChange={(e) => handleHeightChange(+e.target.value)}
+              onChange={(e) => onHeightChange(+e.target.value)}
               placeholder={String(imageInfo.height)}
               min={1}
             />
@@ -117,6 +129,7 @@ export function Options({
             max={100}
             value={quality}
             onChange={(e) => setQuality(+e.target.value)}
+            disabled={format === "png"}
           />
         </div>
       </div>
@@ -131,4 +144,3 @@ export function Options({
     </div>
   );
 }
-
