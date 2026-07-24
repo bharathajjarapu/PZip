@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import "./index.css";
-import type { ImageInfo, CompressionResult, OutputFormat, Settings } from "./types";
+import type { ImageInfo, CompressionResult, Settings } from "./types";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { Upload } from "./components/Upload";
@@ -40,18 +39,14 @@ export function App() {
   );
 
   const handleCompress = useCallback(
-    async (format: OutputFormat, quality: number, width: number, height: number) => {
+    async (settings: Settings) => {
       if (!imageInfo) return;
       setError(null);
       setPhase("processing");
 
       const res = await compress({
         file: imageInfo.file,
-        format,
-        quality,
-        width,
-        height,
-        lockAspect: true,
+        ...settings,
       });
 
       if (!res.ok) {
@@ -60,7 +55,7 @@ export function App() {
         return;
       }
 
-      setLastSettings({ format, quality, width, height });
+      setLastSettings(settings);
       const url = trackUrl(URL.createObjectURL(res.blob));
       setResult({ blob: res.blob, size: res.blob.size, url, width: res.width, height: res.height });
       setPhase("done");
@@ -141,11 +136,11 @@ export function App() {
           </div>
         )}
 
-        {phase === "done" && imageInfo && result && (
+        {phase === "done" && imageInfo && result && lastSettings && (
           <Result
             imageInfo={imageInfo}
             result={result}
-            format={result.blob.type.replace("image/", "")}
+            format={lastSettings.format}
             onReset={handleReset}
             onTryAgain={handleTryAgain}
           />
@@ -156,5 +151,3 @@ export function App() {
     </div>
   );
 }
-
-export default App;

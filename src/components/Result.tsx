@@ -1,16 +1,5 @@
-import type { ImageInfo, CompressionResult } from "../types";
-
-function formatBytes(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
-}
-
-function extensionFor(format: string) {
-  if (format === "jpeg") return "jpg";
-  if (format === "heif") return "heic";
-  return format;
-}
+import type { ImageInfo, CompressionResult, OutputFormat } from "../types";
+import { formatBytes } from "../utils/format";
 
 export function Result({
   imageInfo,
@@ -21,17 +10,18 @@ export function Result({
 }: {
   imageInfo: ImageInfo;
   result: CompressionResult;
-  format: string;
+  format: OutputFormat;
   onReset: () => void;
   onTryAgain: () => void;
 }) {
   const percentageSaved = 100 - Math.round((result.size / imageInfo.size) * 100);
   const baseName = imageInfo.name.replace(/\.[^.]+$/, "");
+  const ext = format === "jpeg" ? "jpg" : format;
 
   const handleDownload = () => {
     const link = document.createElement("a");
     link.href = result.url;
-    link.download = `${baseName}_compressed.${extensionFor(format)}`;
+    link.download = `${baseName}_compressed.${ext}`;
     link.click();
   };
 

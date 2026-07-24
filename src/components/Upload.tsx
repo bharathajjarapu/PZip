@@ -1,9 +1,10 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import type { ImageInfo } from "../types";
 
+const IMAGE_PREFIX = "image/";
+
 function formatFromMime(mime: string): string {
-  if (!mime.startsWith("image/")) return mime || "unknown";
-  return mime.slice("image/".length);
+  return mime.startsWith(IMAGE_PREFIX) ? mime.slice(IMAGE_PREFIX.length) : "unknown";
 }
 
 export function Upload({ onUploadComplete }: { onUploadComplete: (info: ImageInfo) => void }) {
@@ -17,7 +18,6 @@ export function Upload({ onUploadComplete }: { onUploadComplete: (info: ImageInf
     try {
       const bitmap = await createImageBitmap(file);
       const info: ImageInfo = {
-        id: crypto.randomUUID(),
         name: file.name,
         width: bitmap.width,
         height: bitmap.height,

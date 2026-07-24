@@ -1,13 +1,8 @@
 import { useEffect, useState } from "react";
 import type { ImageInfo, OutputFormat, Settings } from "../types";
+import { formatBytes } from "../utils/format";
 
 const FORMATS: OutputFormat[] = ["jpeg", "png", "webp"];
-
-function formatBytes(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
-}
 
 export function Options({
   imageInfo,
@@ -16,7 +11,7 @@ export function Options({
   initialSettings,
 }: {
   imageInfo: ImageInfo;
-  onCompress: (format: OutputFormat, quality: number, width: number, height: number) => void;
+  onCompress: (settings: Settings) => void;
   error: string | null;
   initialSettings: Settings | null;
 }) {
@@ -24,7 +19,7 @@ export function Options({
   const [quality, setQuality] = useState(initialSettings?.quality ?? 80);
   const [width, setWidth] = useState(initialSettings?.width ?? 0);
   const [height, setHeight] = useState(initialSettings?.height ?? 0);
-  const [lockAspect, setLockAspect] = useState(true);
+  const [lockAspect, setLockAspect] = useState(initialSettings?.lockAspect ?? true);
   const [previewUrl, setPreviewUrl] = useState<string>("");
 
   useEffect(() => {
@@ -136,7 +131,7 @@ export function Options({
 
       <button
         className="btn btn-go options-submit"
-        onClick={() => onCompress(format, quality, width || 0, height || 0)}
+        onClick={() => onCompress({ format, quality, width: width || 0, height: height || 0, lockAspect })}
       >
         Compress
         <span className="arrow">→</span>

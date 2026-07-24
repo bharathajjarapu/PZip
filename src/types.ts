@@ -5,16 +5,12 @@ export interface Settings {
   quality: number;
   width: number;
   height: number;
+  lockAspect: boolean;
 }
 
-export interface CompressRequest {
+export interface CompressRequest extends Settings {
   id: string;
   file: Blob;
-  format: OutputFormat;
-  quality: number;
-  width: number;
-  height: number;
-  lockAspect: boolean;
 }
 
 export interface CompressSuccess {
@@ -34,7 +30,6 @@ export interface CompressFailure {
 export type CompressResponse = CompressSuccess | CompressFailure;
 
 export interface ImageInfo {
-  id: string;
   name: string;
   width: number;
   height: number;
