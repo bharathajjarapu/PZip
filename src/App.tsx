@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ImageInfo, CompressionResult, Settings } from "./types";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
@@ -78,6 +78,36 @@ export function App() {
     setLastSettings(null);
     setPhase("idle");
   }, [revokeAll]);
+
+  useEffect(() => {
+    const el = document.documentElement, body = document.body;
+    const lock = () => {
+      const small = window.innerWidth <= 767;
+      if (phase === "idle" && small) {
+        el.style.overflow = "hidden";
+        el.style.position = "fixed";
+        el.style.width = "100%";
+        el.style.height = "100%";
+        body.style.overflow = "hidden";
+      } else {
+        el.style.overflow = "";
+        el.style.position = "";
+        el.style.width = "";
+        el.style.height = "";
+        body.style.overflow = "";
+      }
+    };
+    lock();
+    window.addEventListener("resize", lock);
+    return () => {
+      window.removeEventListener("resize", lock);
+      el.style.overflow = "";
+      el.style.position = "";
+      el.style.width = "";
+      el.style.height = "";
+      body.style.overflow = "";
+    };
+  }, [phase]);
 
   return (
     <div className="prism-root">
