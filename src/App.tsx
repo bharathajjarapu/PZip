@@ -111,7 +111,7 @@ export function App() {
 
   return (
     <div className="prism-root">
-      <Header />
+      <Header onHome={handleReset} />
       <main className={`main-content ${phase === "options" || phase === "done" ? "compact-phase" : ""}`}>
         {phase === "idle" && (
           <div className="hero-landing">
@@ -119,15 +119,6 @@ export function App() {
               <h1>
                 P<em>Zip.</em>
               </h1>
-              <div className="hero-powered-by">
-                Powered by{" "}
-                <span className="powered-tag">
-                  <svg className="powered-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                    <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8Zm-1-13h2v6h-2Zm0 8h2v2h-2Z" />
-                  </svg>
-                  Your Browser
-                </span>
-              </div>
               <p>Local, Fast Image Compression Tool For Modern Web</p>
             </div>
 

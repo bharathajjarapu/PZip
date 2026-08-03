@@ -1,8 +1,18 @@
-export function Header() {
+export function Header({ onHome }: { onHome: () => void }) {
   return (
     <header className="header">
       <div className="header-left">
-        <span className="logo-text">P<em>Zip.</em></span>
+        <a
+          href="/"
+          className="logo-text"
+          aria-label="PZip home"
+          onClick={(event) => {
+            event.preventDefault();
+            onHome();
+          }}
+        >
+          PZip.
+        </a>
       </div>
       <div className="header-right">
         <a
